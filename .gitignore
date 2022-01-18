@@ -25,3 +25,7 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+# Ignore the ssl files
+/config/ssl/*
+!/config/ssl/.keep

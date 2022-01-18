@@ -13,7 +13,7 @@ Bundler.require(*Rails.groups)
 
 module Ads
   class Application < Rails::Application
-    config.load_defaults 6.1
+    config.load_defaults 7.0
     config.time_zone = 'Paris'
     config.api_only = true
   end

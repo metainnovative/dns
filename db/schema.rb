@@ -10,10 +10,56 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_08_19_143426) do
+ActiveRecord::Schema.define(version: 2021_09_05_101234) do
 
   # These are extensions that must be enabled in order to support this database
+  enable_extension "pgcrypto"
   enable_extension "plpgsql"
+
+  create_table "caches", force: :cascade do |t|
+    t.string "type", null: false
+    t.string "value"
+    t.integer "caches_domains_count", default: 0, null: false
+    t.datetime "last_updated_at", precision: 6, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index "digest((value)::text, 'sha1'::text), type", name: "index_caches_on_digest_value_sha1_text_type", unique: true
+    t.index ["type", "id"], name: "index_caches_on_type_and_id"
+    t.index ["type"], name: "index_caches_on_type"
+  end
+
+  create_table "caches_domains", force: :cascade do |t|
+    t.bigint "cache_id", null: false
+    t.bigint "domain_id", null: false
+    t.datetime "last_updated_at", precision: 6, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["cache_id", "domain_id"], name: "index_caches_domains_on_cache_id_and_domain_id", unique: true
+    t.index ["cache_id"], name: "index_caches_domains_on_cache_id"
+    t.index ["domain_id"], name: "index_caches_domains_on_domain_id"
+  end
+
+  create_table "clients", force: :cascade do |t|
+    t.cidr "ip_address", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["ip_address"], name: "index_clients_on_ip_address", unique: true
+  end
+
+  create_table "domains", force: :cascade do |t|
+    t.string "type", null: false
+    t.string "value"
+    t.integer "caches_domains_count", default: 0, null: false
+    t.datetime "last_updated_at", precision: 6, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "owner_type"
+    t.bigint "owner_id"
+    t.index "digest((value)::text, 'sha1'::text), owner_type, owner_id", name: "index_domains_on_digest_value_sha1_text_owner_type_owner_id", unique: true
+    t.index ["owner_type", "owner_id"], name: "index_domains_on_owner"
+    t.index ["type", "id"], name: "index_domains_on_type_and_id"
+    t.index ["type"], name: "index_domains_on_type"
+  end
 
   create_table "oauth_access_tokens", force: :cascade do |t|
     t.bigint "resource_owner_id"
@@ -52,6 +98,8 @@ ActiveRecord::Schema.define(version: 2021_08_19_143426) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "caches_domains", "caches", column: "cache_id"
+  add_foreign_key "caches_domains", "domains"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "users", column: "resource_owner_id"
 end
