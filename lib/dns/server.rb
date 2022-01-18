@@ -8,6 +8,8 @@ module DNS
 
     UPSTREAM = RubyDNS::Resolver.new([[:ssl, '8.8.8.8', 853], [:ssl, '8.8.4.4', 853], [:ssl, '1.1.1.1', 853], [:ssl, '1.0.0.1', 853]])
     IN = Resolv::DNS::Resource::IN
+    RECORD_RESOURCES_CLASS = [IN::A, IN::CNAME, IN::PTR, IN::MX, IN::TXT, IN::AAAA]
+    RECORD_MATCHER = ->(transaction) { Record.exists?(type: "Recordes::#{transaction.resource_class.name.demodulize.capitalize}", name: transaction.name) }
 
     DEFAULT_ADDRESS = '0.0.0.0'
     DEFAULT_ADDRESS6 = '::'
@@ -97,6 +99,12 @@ module DNS
             transaction.respond!('127.0.0.1')
           elsif transaction.resource_class == IN::AAAA
             transaction.respond!('::1')
+          end
+        end
+
+        match(RECORD_MATCHER, RECORD_RESOURCES_CLASS) do |transaction|
+          Record.where(type: "Recordes::#{transaction.resource_class.name.demodulize.capitalize}", name: transaction.name).find_each do |record|
+            transaction.respond!(*record.computed_value)
           end
         end
 
